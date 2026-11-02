@@ -39,7 +39,7 @@ clean:
 	$(RM) $(KERNEL) $(ISO)
 
 fclean: 
-	$(RM) MY_OS
+	$(RM) MY_OS MY_OS.iso
 
 re: fclean all
 
