@@ -1,9 +1,11 @@
 // For freestanding (no C standard library)
-#include <stdbool.h> // for bool datatype
-#include <stddef.h>  // for size_t and NULL
-#include <stdint.h>   // for intx_t and uintx_t datatypes
+// #include <stdbool.h> // for bool datatype
+// #include <stddef.h>  // for size_t and NULL
+// #include <stdint.h>   // for intx_t and uintx_t datatypes
 // all three unvaluable for os development where you need to make sure of exact size
 // Additionally can use  <float.h>, <iso646.h>, <limits.h>, and <stdarg.h>
+
+#include "kernel.h"
 
 // /* Check if the compiler thinks you are targeting the wrong operating system. */
 // #if defined(__linux__)
@@ -14,6 +16,38 @@
 // #if !defined(__i386__)
 // #error "This tutorial needs to be compiled with a ix86-elf compiler"
 // #endif
+
+
+// ######## DEBUG #####################
+
+// void    ft_printnbr(long int nb, int fd)
+// {
+//         if (nb / 10)
+//         {
+//                 ft_printnbr(nb / 10, fd);
+//                 ft_printnbr(nb % 10, fd);
+//         }
+//         else
+//                 ft_putchar_fd(nb + '0', fd);
+// }
+
+// void    ft_putnbr_fd(int n, int fd)
+// {
+//         long int        lnb;
+
+//         lnb = n;
+//         if (lnb < 0)
+//         {
+//                 write(fd, "-", 1);
+//                 lnb *= -1;
+//         }
+//         ft_printnbr(lnb, fd);
+// }
+
+// ######## DEBUG #####################
+
+
+
 
 /* Hardware text mode color constants. */
 enum vga_color {
@@ -35,6 +69,9 @@ enum vga_color {
 	VGA_COLOR_WHITE = 15,
 };
 
+
+void    ter_print(const char *str); // remove later, for debug
+
 static inline uint8_t vga_entry_color(enum vga_color fg, enum vga_color bg) 
 {
 	return fg | bg << 4;
@@ -52,9 +89,9 @@ size_t  ft_strlen(const char *str) {
     return len;
 }
 
-#define VGA_HEIGHT 25
-#define VGA_WIDTH  80
-#define VGA_MEMORY 0xB8000
+// #define VGA_HEIGHT 25
+// #define VGA_WIDTH  80
+// #define VGA_MEMORY 0xB8000
 
 size_t      ter_row;
 size_t      ter_column;
@@ -74,10 +111,35 @@ void ter_init(void)
 			ter_buffer[index] = vga_entry(' ', ter_color);
 		}
 	}
+    enable_cursor(0, 15);
 }
 
-void    ter_putentry(char c, uint8_t color, size_t x, size_t y) {
-    const size_t i = y * VGA_WIDTH + x;
+size_t  newline(char c) {
+    if (c == '\n') {
+        ter_column = 0;
+        ter_row++;
+        return 1;
+    }
+    return 0;
+}
+
+void    ter_scroll() {
+    for(size_t i = 0; i < VGA_HEIGHT; i++) {
+        for (size_t j = 0; j < VGA_WIDTH; j++) {
+            ter_buffer[i * VGA_WIDTH + j] = ter_buffer[(i + 1) * VGA_WIDTH + j];
+        }
+    }
+    uint16_t blank = ' ' | (ter_color << 8);
+    for (size_t x = 0; x < VGA_WIDTH; x++) {
+        ter_buffer[(VGA_HEIGHT - 1) * VGA_WIDTH + x] = blank;
+    }
+}
+
+void    ter_putentry(char c, uint8_t color, size_t column, size_t row) {
+
+    if (newline(c))
+        return ;
+    const size_t i = row * VGA_WIDTH + column;
     ter_buffer[i] = vga_entry(c, color);
 }
 
@@ -103,6 +165,18 @@ void    kmain(void);
 
 void    kmain(void) { 
     ter_init();
+    char *index = "123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
+    char *str = "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA";
+    ter_print("Hello world!\nsalu\n");
+    // ter_print(str);
 
-    ter_print("Hello world!\n");
+    for(size_t i = 0; i < 5; i++) {
+        if (ter_row == VGA_HEIGHT - 1) {
+            ter_row--;
+            ter_scroll();
+        }
+        update_cursor(ter_column, ter_row + 1);
+        ter_putchar(index[i]);
+        ter_putchar('\n');
+    }
 }

@@ -5,8 +5,8 @@ SRC =
 
 OBJ = ${SRC:.c=.o}
 
-CC = gcc
-CFLAGS = -fno-builtin -fno-stack-protector
+CC = gcc -m32
+CFLAGS = -fno-builtin -fno-exceptions -fno-stack-protector -nostdlib -nodefaultlibs
 RM = rm -rf
 AR = ar rc
 
@@ -14,15 +14,28 @@ KERNEL 	= MY_OS/boot/kernel
 ISO		= MY_OS/MY_OS.iso
 
 BOOT 	= srcs/boot.s
-KERNELC = srcs/kernel.c
+KERNELC = srcs/kernel.c \
+		  srcs/cursor.c \
+		  srcs/keyboard.c 
+		  
 LINKER  = srcs/linker.ld
+KERNELOBJ = $(patsubst srcs/%.c,MY_OS/%.o,$(KERNELC))
 
-all: 
-	@mkdir -p MY_OS/boot
-	@gcc -m32 $(CFLAGS) -c $(KERNELC) -o MY_OS/kernel.o
-	@nasm -f elf32 $(BOOT) -o MY_OS/boot.o
-	@ld -m elf_i386 -T $(LINKER) -o $(KERNEL) MY_OS/boot.o MY_OS/kernel.o
-	@echo 'BUILD IS DONE'
+
+all:  $(KERNEL)
+# 	@mkdir -p MY_OS/boot
+# 	@$(CC) $(CFLAGS) -Iinclude/ -c $(KERNELC) -o MY_OS/kernel.o
+# 	@nasm -f elf32 $(BOOT) -o MY_OS/boot.o
+# 	@ld -m elf_i386 -T $(LINKER) -o $(KERNEL) MY_OS/boot.o MY_OS/kernel.o
+# 	@echo 'BUILD IS DONE'
+
+$(KERNEL): MY_OS/boot.o $(KERNELOBJ)
+	mkdir -p MY_OS/boot
+	ld -m elf_i386 -T $(LINKER) -o $@ $^
+
+MY_OS/boot.o: $(BOOT)
+	mkdir -p MY_OS
+	nasm -f elf32 $< -o $@
 
 iso:
 	@mkdir -p MY_OS/boot/grub
@@ -34,6 +47,8 @@ iso:
 launch:
 	qemu-system-i386 MY_OS.iso
 
+MY_OS/%.o: srcs/%.c
+	$(CC) $(CFLAGS) -m32 -Iinclude/ -c $< -o $@
 
 clean:
 	$(RM) $(KERNEL) $(ISO)
