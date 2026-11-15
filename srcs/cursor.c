@@ -1,17 +1,17 @@
 #include "kernel.h"
 
-static inline void outb(unsigned short port, unsigned char value)
-{
-    asm volatile ( "outb %0, %1" : : "a"(value), "Nd"(port) );
-}
+// static inline void outb(unsigned short port, unsigned char value)
+// {
+//     asm volatile ( "outb %0, %1" : : "a"(value), "Nd"(port) );
+// }
 
-static inline unsigned char inb(unsigned short port)
-{
-    unsigned char ret;
-    asm volatile ( "inb %1, %0" : "=a"(ret) : "Nd"(port) );
+// static inline unsigned char inb(unsigned short port)
+// {
+//     unsigned char ret;
+//     asm volatile ( "inb %1, %0" : "=a"(ret) : "Nd"(port) );
 
-    return ret;
-}
+//     return ret;
+// }
 
 
 void enable_cursor(uint8_t cursor_start, uint8_t cursor_end)
