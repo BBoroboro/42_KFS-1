@@ -53,15 +53,15 @@ void* ft_memset(void *ptr, int c, size_t n) {
 }
 
 
-static inline void outPortB(unsigned short port, unsigned char value)
+void outPortB(unsigned short port, unsigned char value)
 {
-    asm volatile ( "outb %0, %1" : : "a"(value), "Nd"(port) );
+    asm volatile ( "outb %1, %0" : : "dN"(port), "a"(value));
 }
 
-static inline unsigned char inPortB(unsigned short port)
+unsigned char inPortB(unsigned short port)
 {
     unsigned char ret;
-    asm volatile ( "inb %1, %0" : "=a"(ret) : "Nd"(port) );
+    asm volatile ( "inb %1, %0" : "=a"(ret) : "dN"(port) );
 
     return ret;
 }
@@ -82,7 +82,8 @@ void    setIdtGate(uint8_t n, uint32_t base, uint16_t selector, uint8_t flags) {
     idt_entries[n].high_offset = (base >> 16) & 0xFFFF;
     idt_entries[n].selector = selector;
     idt_entries[n].always0 = 0;
-    idt_entries[n].flags = flags | 0x60; // or it to eleminate unnecessary flags
+    // idt_entries[n].flags = flags | 0x60; // or it to eleminate unnecessary flags
+    idt_entries[n].flags = flags;
 }
 
 void    initIdt() {
@@ -106,8 +107,10 @@ void    initIdt() {
     outPortB(0x21, 0x01); //
     outPortB(0xA1, 0x01);
 
-    outPortB(0x21, 0x0); // 
-    outPortB(0xA1, 0x0);
+    // outPortB(0x21, 0x0); // 
+    // outPortB(0xA1, 0x0);
+    outPortB(0x21, 0xFD); // Master PIC: only IRQ1 enabled
+    outPortB(0xA1, 0xFF); // Slave PIC: all IRQs disabled
 
     // 0x8E -> sets 47 to 40 in Gate descriptor
     setIdtGate(0, (uint32_t)isr0, 0x08, 0x8E);
@@ -172,7 +175,7 @@ void   *irq_routines[16] = {
     0,0,0,0,0,0,0,0
 };
 
-void    irq_install_handler(int irq, void *(handler)(idt_register_t *r)) {
+void    irq_install_handler(int irq, void (*handler)(idt_register_t *r)) {
     irq_routines[irq] = handler;
 }
 

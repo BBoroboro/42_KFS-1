@@ -3,13 +3,12 @@ global idt_flush
 idt_flush:
     mov     eax, [esp+4]
     lidt    [eax]
-    sti 
     ret
 
 %macro  ISR_NO_ERRCODE 1
     global  isr%1
     isr%1:
-        cli
+        ; cli
         push long   0
         push long   %1
         jmp         isr_common_stub
@@ -18,7 +17,7 @@ idt_flush:
 %macro  ISR_ERRCODE 1
     global  isr%1
     isr%1:
-        cli
+        ; cli
         push long   %1
         jmp         isr_common_stub
 %endmacro
@@ -26,7 +25,7 @@ idt_flush:
 %macro  IRQ 2
     global  irq%1
     irq%1:
-        cli
+        ; cli
         push long   0
         push long   %2
         jmp     irq_common_stub
@@ -89,8 +88,8 @@ isr_common_stub:
     pusha
     mov     eax, ds
     push    eax
-    mov     eax, cr2
-    push    eax
+    ; mov     eax, cr2
+    ; push    eax
 
     mov     ax, 0x10
     mov     ds, ax
@@ -101,7 +100,7 @@ isr_common_stub:
     push    esp
     call    isr_handler
 
-    add     esp, 8
+    add     esp, 4
     pop     ebx
     mov     ds, bx
     mov     es, bx
@@ -110,7 +109,6 @@ isr_common_stub:
 
     popa
     add     esp, 8
-    sti
     iret
 
 extern irq_handler
@@ -118,8 +116,8 @@ irq_common_stub:
     pusha
     mov     eax, ds
     push    eax
-    mov     eax, cr2
-    push    eax
+    ; mov     eax, cr2
+    ; push    eax
 
     mov     ax, 0x10
     mov     ds, ax
@@ -130,7 +128,7 @@ irq_common_stub:
     push    esp
     call    irq_handler
 
-    add     esp, 8
+    add     esp, 4
     pop     ebx
     mov     ds, bx
     mov     es, bx
@@ -139,5 +137,4 @@ irq_common_stub:
 
     popa
     add     esp, 8
-    sti
     iret

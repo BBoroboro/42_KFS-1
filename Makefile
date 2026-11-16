@@ -15,17 +15,20 @@ ISO		= MY_OS/MY_OS.iso
 
 BOOT 	= srcs/boot.s
 # ASM		= srcs/ISR.s
-ASM		= srcs/idt_asm.s
+ASM		= srcs/idt_asm.s \
+		  srcs/gdt_asm.s
 KERNELC = srcs/kernel.c \
 		  srcs/vga.c \
 		  srcs/utils.c \
+		  srcs/gdt.c \
 		  srcs/idt.c \
 		  srcs/cursor.c \
 		  srcs/keyboard1.c 
 		  
 LINKER  = srcs/linker.ld
 KERNELOBJ = $(patsubst srcs/%.c,MY_OS/%.o,$(KERNELC))
-ASMOBJ = MY_OS/idt_asm.o
+ASMOBJ = MY_OS/idt_asm.o \
+		 MY_OS/gdt_asm.o
 
 all:  $(KERNEL)
 # 	@mkdir -p MY_OS/boot

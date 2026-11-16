@@ -19,7 +19,7 @@
 
 extern size_t               ter_row;
 extern size_t               ter_column;
-extern uint16_t const     ter_defColor;
+extern uint16_t const       ter_defColor;
 extern uint16_t             ter_color;
 extern uint16_t             *ter_buffer;
 
@@ -43,6 +43,8 @@ enum vga_color {
 	VGA_COLOR_WHITE = 15,
 };
 
+// ####### FUNCTIONS VGA put inside the other one later
+
 static inline uint8_t vga_entry_color(enum vga_color fg, enum vga_color bg) 
 {
 	return fg | bg << 4;
@@ -59,10 +61,10 @@ static inline uint16_t vga_entry(unsigned char uc, uint8_t color)
 
 typedef struct {
     uint16_t   low_offset;
-    uint16_t   high_offset;
     uint16_t   selector;
     uint8_t    always0;
     uint8_t    flags;
+    uint16_t   high_offset;
 } __attribute__((packed)) idt_entry_t;
 
 typedef struct {
@@ -71,12 +73,14 @@ typedef struct {
 } __attribute__((packed)) idt_ptr_t;
 
 typedef struct {
-    uint32_t    cr2;
+    // uint32_t    cr2;
     uint32_t    ds;
     uint32_t    edi, esi, ebp, esp, ebx, edx, ecx, eax;
     uint32_t    int_no, err_code;
     uint32_t    eip, cs, eflags, useresp, ss;
 }   idt_register_t;
+
+// ####### FUNCTIONS IDT H
 
 extern void isr0(void);
 extern void isr1(void);
@@ -131,30 +135,45 @@ extern void irq15(void);
 extern void isr128(void);
 extern void isr177(void);
 
-// extern void irq0(void);
-// extern void irq1(void);
-// extern void irq2(void);
-// extern void irq3(void);
-// extern void irq4(void);
-// extern void irq5(void);
-// extern void irq6(void);
-// extern void irq7(void);
-// extern void irq8(void);
-// extern void irq9(void);
-// extern void irq10(void);
-// extern void irq11(void);
-// extern void irq12(void);
-// extern void irq13(void);
-// extern void irq14(void);
-// extern void irq15(void);
+void        initIdt();
+void        irq_install_handler(int irq, void (*handler)(idt_register_t *r));
 
 // #######################
-// ######## IDT H ########
+// ######## GDT H ########
 // #######################
+
+// has to be loaded the exact same way as in the segment descriptor! same with idt ?
+
+typedef struct {
+    uint16_t    limit;
+    uint16_t    base_low;
+    uint8_t     base_middle;
+    uint8_t     accessB;
+    uint8_t     flags;
+    uint8_t     base_high;
+}   __attribute__((packed)) gdt_entry_t;
+
+typedef struct {
+    uint16_t     limit;
+    unsigned int base;
+}   __attribute__((packed)) gdt_ptr_t;
+
+void    initGdt();
+
+
+
+// #######################
+// ######## KEYBOARD H ########
+// #######################
+
 
 // ######### ######### ######### 
 // ######### FUNCTIONS ######### 
 // ######### ######### ######### 
+
+void initKeyboard();
+
+
 
 
 // #########    VGA    ######### 
@@ -175,25 +194,29 @@ size_t  ft_strlen(const char *str);
 // static inline void outb(unsigned short port, unsigned char value);
 // static inline unsigned char inb(unsigned short port);
 
-static inline void outb(unsigned short port, unsigned char value)
-{
-    asm volatile ( "outb %0, %1" : : "a"(value), "Nd"(port) );
-}
+// static inline void outb(unsigned short port, unsigned char value)
+// {
+//     asm volatile ( "outb %0, %1" : : "a"(value), "Nd"(port) );
+// }
 
-static inline unsigned char inb(unsigned short port)
-{
-    unsigned char ret;
-    asm volatile ( "inb %1, %0" : "=a"(ret) : "Nd"(port) );
+// static inline unsigned char inb(unsigned short port)
+// {
+//     unsigned char ret;
+//     asm volatile ( "inb %1, %0" : "=a"(ret) : "Nd"(port) );
 
-    return ret;
-}
+//     return ret;
+// }
+
+void outPortB(unsigned short port, unsigned char value);
+
+unsigned char inPortB(unsigned short port);
 
 void enable_cursor(uint8_t cursor_start, uint8_t cursor_end);
 void update_cursor(int x, int y);
 
 // void isr_install();
 
-// void init_keyboard();
+void init_keyboard();
 
 // void initKeyboard();
 // void keyboardHandler(struct interruptRegister *r);

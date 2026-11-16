@@ -16,6 +16,13 @@ uint16_t const     ter_defColor = (VGA_COLOR_BLACK << 8) | (VGA_COLOR_LIGHT_GREY
 uint16_t    *ter_buffer = (uint16_t*)VGA_MEMORY;
 uint16_t    ter_color = ter_defColor;
 
+void    test_div_zero(void) {
+    volatile int z = 0;
+    volatile int res;
+
+    res = 10 / z;
+}
+
 void ter_init(void) 
 {
 	ter_row = 0;
@@ -28,7 +35,7 @@ void ter_init(void)
 			ter_buffer[index] = vga_entry(' ', ter_color);
 		}
 	}
-    enable_cursor(0, 15);
+    // enable_cursor(0, 15);
 }
 
 
@@ -46,15 +53,28 @@ void    kmain(void) {
             ter_row--;
             ter_scroll();
         }
-        update_cursor(ter_column, ter_row + 1);
+        // update_cursor(ter_column, ter_row + 1);
         ter_putchar(index[i]);
         ter_putchar('\n');
     }
 
-    // asm volatile("cli");
-    // isr_install();
+    asm volatile("cli");
 
-    // init_keyboard();
-    // asm volatile("sti");
+    initGdt();
+    ter_print("GDT IS DONE\n"); // test
+    initIdt();
+    ter_print("IDT IS DONE\n");
+
+    // update_cursor(ter_column, ter_row + 1);
+    // test_div_zero();
+    // update_cursor(ter_column, ter_row + 1);
+
+    initKeyboard();
+    // update_cursor(ter_column, ter_row + 1);
+    asm volatile("sti");
+    for (;;) {
+        asm volatile("hlt");
+    }
+
     
 }
