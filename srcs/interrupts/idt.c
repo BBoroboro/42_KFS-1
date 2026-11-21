@@ -42,32 +42,6 @@ unsigned char    *execpt_msgs[] = {
     "Reserved"
 };
 
-// UTILS.C
-
-void* ft_memset(void *ptr, int c, size_t n) {
-    unsigned char *temp = ptr;
-    for(size_t x = 0; x < n; x++) {
-        temp[x] = c;
-    }
-    return ptr;
-}
-
-
-void outPortB(unsigned short port, unsigned char value)
-{
-    asm volatile ( "outb %1, %0" : : "dN"(port), "a"(value));
-}
-
-unsigned char inPortB(unsigned short port)
-{
-    unsigned char ret;
-    asm volatile ( "inb %1, %0" : "=a"(ret) : "dN"(port) );
-
-    return ret;
-}
-
-// UTILS.C
-
 void    isr_handler(idt_register_t *r) {
     if (r->int_no < 32) {
         ter_print(execpt_msgs[r->int_no]);
@@ -109,11 +83,11 @@ void    initIdt() {
 
     // outPortB(0x21, 0x0); // 
     // outPortB(0xA1, 0x0);
-    outPortB(0x21, 0xFD); // Master PIC: only IRQ1 enabled
+    outPortB(0x21, 0xFD); // Master PIC: only IRQ1 enabled, change later?
     outPortB(0xA1, 0xFF); // Slave PIC: all IRQs disabled
 
     // 0x8E -> sets 47 to 40 in Gate descriptor
-    setIdtGate(0, (uint32_t)isr0, 0x08, 0x8E);
+    setIdtGate(0, (uint32_t) isr0, 0x08, 0x8E);
     setIdtGate(1, (uint32_t) isr1, 0x08, 0x8E);
     setIdtGate(2, (uint32_t) isr2, 0x08, 0x8E);
     setIdtGate(3, (uint32_t) isr3, 0x08, 0x8E);

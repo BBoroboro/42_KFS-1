@@ -43,20 +43,20 @@ void    kmain(void);
 
 void    kmain(void) { 
     ter_init();
-    char *index = "123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
-    char *str = "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA";
-    ter_print("Hello world!\nsalu\n");
+    // char *index = "123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
+    // char *str = "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA";
+    ter_print("$ Hello world! This is 42!\n");
     // ter_print(str);
 
-    for(size_t i = 0; i < 5; i++) {
-        if (ter_row == VGA_HEIGHT - 1) {
-            ter_row--;
-            ter_scroll();
-        }
-        // update_cursor(ter_column, ter_row + 1);
-        ter_putchar(index[i]);
-        ter_putchar('\n');
-    }
+    // for(size_t i = 0; i < 5; i++) {
+    //     if (ter_row == VGA_HEIGHT - 1) {
+    //         ter_row--;
+    //         ter_scroll();
+    //     }
+    //     // update_cursor(ter_column, ter_row + 1);
+    //     ter_putchar(index[i]);
+    //     ter_putchar('\n');
+    // }
 
     asm volatile("cli");
 
@@ -73,6 +73,12 @@ void    kmain(void) {
     // update_cursor(ter_column, ter_row + 1);
     asm volatile("sti");
     for (;;) {
+        update_cursor(ter_column, ter_row);
+        if (ter_row + 1 == VGA_HEIGHT) {
+            ter_scroll();
+            ter_column = 1; // not normal compared to newline
+            ter_row--;
+        }
         asm volatile("hlt");
     }
 
